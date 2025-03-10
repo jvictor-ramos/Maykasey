@@ -1,0 +1,17 @@
+{
+  "floresta": {
+    "dificuldade": "fácil",
+    "drop": 1,
+    "eventos": ["erva-falsa"]
+  },
+  "montanhas": {
+    "dificuldade": "média",
+    "drop": [1, 2],
+    "eventos": ["batalha", "erva-falsa"]
+  },
+  "pântano": {
+    "dificuldade": "difícil",
+    "drop": [1, 5],
+    "eventos": ["batalha", "erva-falsa", "horda-esqueletos"]
+  }
+}
