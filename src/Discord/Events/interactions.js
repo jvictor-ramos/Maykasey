@@ -1,56 +1,52 @@
 const db = require("../../Models/Schemas/Guilds.js");
-const { MessageFlags } = require("../../Models/Schemas/User.js");
+const { MessageFlags } = require("discord.js");
 
 module.exports = {
   name: "interactionCreate",
   run: async (client, interaction) => {
     if (interaction.isCommand()) return;
+
     if (interaction.message.createdTimestamp < (client.readyTimestamp || 0)) {
       return interaction.reply({
         content: "Os dados dessa interação foram perdidos...",
         flags: MessageFlags.Ephemeral,
       });
     }
-    if (interaction.isButton()) {
-      const args = interaction.customId.split("-");
-      const interactionId = args.shift();
-      const buttonData = client.components.get(interactionId);
 
-      if (buttonData?.authorOnly && interaction.user.id !== args[0])
+    const checkAuthor = (customId, userId) => {
+      const args = customId.split("-");
+      const interactionId = args.shift();
+      const data = client.components.get(interactionId);
+      if (data?.authorOnly && userId !== args[0]) {
+        return `${userId}, somente o autor da mensagem pode interagir com isso!`;
+      }
+      return data;
+    };
+
+    const processInteraction = async (customId, type) => {
+      const data = checkAuthor(customId, interaction.user.id);
+      if (typeof data === "string") {
         return interaction.reply({
-          content: `${interaction.user}, somente o autor da mensagem pode clicar nesse botão!`,
+          content: data,
           flags: MessageFlags.Ephemeral,
         });
+      }
 
-      if (buttonData) buttonData.run(client, interaction, args, db);
+      if (data) {
+        data.run(client, interaction, customId.split("-").slice(1), db);
+      }
+    };
+
+    if (interaction.isButton()) {
+      return processInteraction(interaction.customId, "button");
     }
 
     if (interaction.isAnySelectMenu()) {
-      const args = interaction.customId.split("-");
-      const interactionId = args.shift();
-      const stringMenuData = client.components.get(interactionId);
-
-      if (stringMenuData?.authorOnly && interaction.user.id !== args[0])
-        return interaction.reply({
-          content: `${interaction.user}, somente o autor da mensagem pode usar esse menu!`,
-          flags: MessageFlags.Ephemeral,
-        });
-
-      if (stringMenuData) stringMenuData.run(client, interaction, args, db);
+      return processInteraction(interaction.customId, "selectMenu");
     }
 
     if (interaction.isModalSubmit()) {
-      const args = interaction.customId.split("-");
-      const interactionId = args.shift();
-      const modalSubmitData = client.components.get(interactionId);
-
-      if (modalSubmitData?.authorOnly && interaction.user.id !== args[0])
-        return interaction.reply({
-          content: `${interaction.user}, somente o autor da mensagem pode usar esse modal!`,
-          flags: MessageFlags.Ephemeral,
-        });
-
-      if (modalSubmitData) modalSubmitData.run(client, interaction, args, db);
+      return processInteraction(interaction.customId, "modalSubmit");
     }
   },
 };

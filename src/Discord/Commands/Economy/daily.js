@@ -25,7 +25,7 @@ module.exports = {
     );
 
     user.cooldowns.daily = nextDaily;
-    user.solarys += amount;
+    user.recursos.solarys += amount;
 
     await user.save();
   },
